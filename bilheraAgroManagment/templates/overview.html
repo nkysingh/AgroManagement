@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0; /* Light grey background for the whole page */
+            transition: margin-left 0.5s; /* Smooth transition for sidebar */
+        }
+        .sidebar {
+            height: 100vh; /* Full-height */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            top: 0; /* Stay at the top */
+            left: 0;
+            background-color: #e7f1ff; /* Light blue background for the sidebar */
+            padding-top: 20px; /* Padding at the top */
+            transition: width 0.5s; /* Smooth transition for width */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+            width: 200px; /* Default width */
+        }
+        .sidebar a {
+            padding: 15px 20px; /* Increased padding for spacing */
+            text-decoration: none;
+            font-size: 1.1em;
+            color: #0056b3; /* Darker blue for the links */
+            display: flex; /* Flexbox for alignment */
+            align-items: center; /* Center vertically */
+            margin-bottom: 10px; /* Space between menu items */
+            border-radius: 5px; /* Rounded corners for links */
+            transition: background-color 0.3s; /* Smooth transition for background color */
+        }
+        .sidebar a:hover {
+            background-color: #007bff; /* Bootstrap primary color on hover */
+            color: white; /* Change text color on hover */
+        }
+        .sidebar .icon {
+            margin-right: 10px; /* Space between icon and text */
+        }
+        .content {
+            margin-left: 200px; /* Leave space for the sidebar */
+            padding: 20px; /* Padding for the content */
+            background-color: white; /* White background for content area */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            transition: margin-left 0.5s; /* Smooth transition for content */
+        }
+        h2 {
+            color: #333; /* Dark grey for heading */
+        }
+        .toggle-btn {
+            cursor: pointer; /* Pointer cursor on hover */
+            background-color: transparent; /* Transparent background */
+            color: #007bff; /* Bootstrap primary color */
+            border: none; /* No border */
+            font-size: 1.5em; /* Larger font size */
+            margin-left: 10px; /* Adjusted margin for better positioning */
+            transition: 0.3s; /* Transition for button */
+        }
+        .toggle-btn:hover {
+            color: #0056b3; /* Darker blue on hover */
+        }
+        .collapsed {
+            width: 60px; /* Width when collapsed */
+        }
+        .collapsed .sidebar a {
+            padding: 15px; /* Reduced padding when collapsed */
+            justify-content: center; /* Center align */
+        }
+        .collapsed .sidebar a span {
+            display: none; /* Hide text when collapsed */
+        }
+        .collapsed .sidebar-header h4 {
+            display: none; /* Hide header text when collapsed */
+        }
+        .sidebar-header {
+            display: flex; /* Flexbox for header */
+            align-items: center; /* Center vertically */
+            padding: 10px 20px; /* Padding for header */
+            margin-bottom: 20px; /* Space below header */
+        }
+        .chart-container {
+            margin-top: 20px; /* Space above charts */
+            display: flex; /* Flexbox for layout */
+            justify-content: space-around; /* Space between charts */
+            flex-wrap: wrap; /* Wrap charts to new lines on smaller screens */
+        }
+        canvas {
+            max-width: 400px; /* Maximum width for each chart */
+            max-height: 300px; /* Maximum height for each chart */
+            margin: 20px; /* Space around charts */
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Collapsed width for smaller screens */
+            }
+            .content {
+                margin-left: 60px; /* Adjust content margin */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+        </div>
+        <a href="#"><i class="bi bi-house icon"></i><span>Overview</span></a>
+        <a href="{% url 'workers_list' %}"><i class="bi bi-person-fill icon"></i><span>Workers</span></a>
+        <a href="#"><i class="bi bi-file-earmark-text icon"></i><span>Reports</span></a>
+        <a href="#"><i class="bi bi-gear icon"></i><span>Settings</span></a>
+        <a href="{% url 'logout' %}"><i class="bi bi-box-arrow-right icon"></i><span>Logout</span></a>
+    </div>
+
+    <div class="content" id="content">
+        <h2>Welcome to the Overview Page</h2>
+        <p>This is the admin overview page for the sugar mills operator attendance management system.</p>
+        <p>You can manage operators, view reports, and configure settings here.</p>
+
+        <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+            <canvas id="manpowerChart"></canvas>
+            <canvas id="profitChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("content");
+            sidebar.classList.toggle("collapsed");
+            content.style.marginLeft = sidebar.classList.contains("collapsed") ? "60px" : "200px";
+
+            // Add functionality to hide/show sidebar items based on collapsed state
+            const sidebarLinks = sidebar.querySelectorAll('a span');
+            sidebarLinks.forEach(link => {
+                link.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'inline';
+            });
+        }
+
+        // Revenue Chart
+        var ctx1 = document.getElementById('revenueChart').getContext('2d');
+        var revenueChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [12000, 19000, 30000, 50000, 24000, 30000, 20000],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Manpower Chart
+        var ctx2 = document.getElementById('manpowerChart').getContext('2d');
+        var manpowerChart = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: ['Admin', 'Workers', 'Supervisors'],
+                datasets: [{
+                    label: 'Manpower Distribution',
+                    data: [30, 50, 20],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 206, 86, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // Profit Chart
+        var ctx3 = document.getElementById('profitChart').getContext('2d');
+        var profitChart = new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Profit',
+                    data: [5000, 7000, 12000, 8000, 11000, 9000, 6000],
+                    fill: false,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    tension: 0.1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
